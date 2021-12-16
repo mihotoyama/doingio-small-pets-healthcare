@@ -1,4 +1,5 @@
-#include <HttpClient.h>
+#include <HTTPClient.h>
+
 #include <ArduinoJson.h>
 
 #include <M5Stack.h>
@@ -127,10 +128,13 @@ void loop()
   int displayYear = nowDayData.nowtimeInfo.tm_year + 1900;
   int displayMonth = nowDayData.nowtimeInfo.tm_mon + 1;
   int displayDay = nowDayData.nowtimeInfo.tm_mday;
+  int displayHour = nowDayData.nowtimeInfo.tm_hour;
+  int displayMin = nowDayData.nowtimeInfo.tm_min;
+  int displaySec = nowDayData.nowtimeInfo.tm_sec;
 
   char buf[128];
   memset(buf, 0x00, sizeof(buf));
-  sprintf(buf, "%04d%02d%02d%02d", displayYear, displayMonth, displayDay);
+  sprintf(buf, "%04d%02d%02d%02d%02d%02d", displayYear, displayMonth, displayDay, displayHour, displayMin, displaySec);
 
   //データ送信用jsonの用意
   StaticJsonDocument<255> json_request;
@@ -213,11 +217,11 @@ void loadTempData()
     int c = 0;
     for (int i = len - 1; i >= 0; i--)
     {
-      char str[16];
+      char str[32];
       strcpy(str, ((char **)cp[0])[i]);
-      char *dst[8];
+      char *dst[16];
       int count = split(dst, str, '/');
-      if (count < 3)
+      if (count < 6)
       {
         Serial.print("date error: ");
         Serial.println(str);
@@ -229,11 +233,17 @@ void loadTempData()
       tinfo.tm_year = (atoi(dst[0]) - 1900);
       tinfo.tm_mon = (atoi(dst[1]) - 1);
       tinfo.tm_mday = (atoi(dst[2]));
+      tinfo.tm_hour = (atoi(dst[3]));
+      tinfo.tm_min = (atoi(dst[4]));
+      tinfo.tm_sec = (atoi(dst[5]));
 
       nowDayData.nowtimeInfo = tinfo;
       nowDayData.sensorsValue[0] = ((float *)cp[1])[i];
       nowDayData.sensorsValue[1] = ((float *)cp[2])[i];
       nowDayData.sensorsValue[2] = ((float *)cp[3])[i];
+      nowDayData.sensorsValue[3] = ((float *)cp[4])[i];
+      nowDayData.sensorsValue[4] = ((float *)cp[5])[i];
+      nowDayData.sensorsValue[5] = ((float *)cp[6])[i];
       c++;
 
       if (c >= 1)
@@ -244,7 +254,7 @@ void loadTempData()
 void saveTempData()
 {
   char buf[128];
-  sprintf(buf, "%04d/%02d/%02d,", nowDayData.nowtimeInfo.tm_year + 1900, nowDayData.nowtimeInfo.tm_mon + 1, nowDayData.nowtimeInfo.tm_mday);
+  sprintf(buf, "%04d/%02d/%02d/%02d/%02d/%02d,", nowDayData.nowtimeInfo.tm_year + 1900, nowDayData.nowtimeInfo.tm_mon + 1, nowDayData.nowtimeInfo.tm_mday, nowDayData.nowtimeInfo.tm_hour, nowDayData.nowtimeInfo.tm_min, nowDayData.nowtimeInfo.tm_sec);
   String str = buf;
 
   for (int i = 0; i < 6; i++)
