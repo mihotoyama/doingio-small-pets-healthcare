@@ -43,6 +43,9 @@ int beforeDay = -1;
 int beforeHour = -1;
 int beforeMin = -1;
 
+//センサーデータのリセット時間：毎朝6時
+int resetHour = 6;
+
 WiFiClient client;
 
 void setup()
@@ -167,8 +170,8 @@ void loop()
     twitterController.tweet();
   }
 
-  //１日おきに実行
-  if (beforeDay != nowDayData.nowtimeInfo.tm_mday)
+  //１日おき(毎朝6時)に実行
+  if ((beforeDay != nowDayData.nowtimeInfo.tm_mday) && (nowDayData.nowtimeInfo.tm_hour == resetHour))
   {
     beforeDay = nowDayData.nowtimeInfo.tm_mday;
 
@@ -276,7 +279,7 @@ void saveTempData()
   file.close();
 }
 
-void sendJson(char *buffer)
+void sendJson(char* buffer)
 {
   Serial.println("Json to send:");
   Serial.println(buffer);
